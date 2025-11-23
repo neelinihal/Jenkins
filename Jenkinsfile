@@ -3,14 +3,14 @@ pipeline {
 
   environment {
     REPO_URL     = 'https://github.com/neelinihal/Jenkins.git'
-    GIT_BRANCH   = 'main'                       // change if you use a different branch
-    MODULE_DIR   = '.'                          // update if your code is in a subfolder
+    GIT_BRANCH   = 'main'
+    MODULE_DIR   = '.'                          // project root
     IMAGE_NAME   = 'neelinihal/jservice'
-    IMAGE_TAG    = "build-${env.BUILD_NUMBER}"  // you can switch to commit SHA later
+    IMAGE_TAG    = "build-${env.BUILD_NUMBER}"  // tag per build
     DOCKER_CREDS = 'dockerhub-creds'
     KUBE_NS      = 'default'
-    DEPLOY_NAME  = 'jservice'                   // your Kubernetes Deployment name
-    CONTAINER    = 'jservice'                   // container name inside the Deployment
+    DEPLOY_NAME  = 'jservice'
+    CONTAINER    = 'jservice'
   }
 
   options {
@@ -32,7 +32,7 @@ pipeline {
       steps {
         dir(MODULE_DIR) {
           bat 'mvn -version'
-          bat 'mvn -Dmaven.test.failure.ignore=false clean package'
+          bat 'mvn clean package -Dmaven.test.failure.ignore=false'
         }
       }
     }
@@ -57,18 +57,15 @@ pipeline {
 
     stage('Deploy to GKE') {
       steps {
-        // Option A: rolling update of an existing Deployment
-        bat "kubectl set image deployment/${DEPLOY_NAME} ${CONTAINER}=${IMAGE_NAME}:${IMAGE_TAG} -n ${KUBE_NS} || ver > nul"
+        // Preferred: apply manifest stored in repo
+        bat "kubectl apply -f deployment.yaml -n ${KUBE_NS}"
         bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS}"
-
-        // Option B: apply manifests (preferred if you store YAML in repo)
-        // bat 'kubectl apply -f k8s/jservice.yaml -n %KUBE_NS%'
       }
     }
   }
 
   post {
-    success { echo "Pushed ${IMAGE_NAME}:${IMAGE_TAG} and deployed to ${KUBE_NS}." }
-    failure { echo "Pipeline failed. Check stage logs." }
+    success { echo "✅ Pushed ${IMAGE_NAME}:${IMAGE_TAG} and deployed to ${KUBE_NS}." }
+    failure { echo "❌ Pipeline failed. Check stage logs." }
   }
 }

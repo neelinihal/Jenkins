@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jservice
+  labels:
+    app: jservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jservice
+  template:
+    metadata:
+      labels:
+        app: jservice
+    spec:
+      containers:
+      - name: jservice
+        image: neelinihal/jservice:latest
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jservice
+  labels:
+    app: jservice
+spec:
+  type: LoadBalancer
+  selector:
+    app: jservice
+  ports:
+  - port: 8080
+    targetPort: 8080
