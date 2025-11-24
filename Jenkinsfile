@@ -21,9 +21,16 @@ pipeline {
     stage('Authenticate GCP') {
       steps {
         withCredentials([file(credentialsId: "${GCP_CREDS}", variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-          bat "C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file=C:/Users/neeli/.kube/steel.json"
-          bat "C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud config set project ${PROJECT_ID}"
-          bat "C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
+        //  bat "C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file=C:/Users/neeli/.kube/steel.json"
+         // bat "C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud config set project ${PROJECT_ID}"
+          //bat "C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
+
+
+          bat "\"C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.exe\" auth activate-service-account --key-file=C:/Users/neeli/.kube/steel.json"
+         bat "\"C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.exe\" config set project ${PROJECT_ID}" 
+        bat "\"C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.exe\" container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
+
+        
         }
       }
     }
