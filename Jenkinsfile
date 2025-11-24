@@ -38,7 +38,7 @@ pipeline {
     stage('Deploy to GKE') {
       steps {
         bat "kubectl apply -f  C:/Users/neeli/.kube/jservice.yaml -n ${KUBE_NS} --validate=false"
-        bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS} --timeout=200s"
+        bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS} "
       }
     }
   }
