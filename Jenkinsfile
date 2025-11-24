@@ -75,8 +75,8 @@ pipeline {
     stage('Deploy to GKE') {
       steps {
         bat "kubectl apply -f jservice.yaml -n ${KUBE_NS} --validate=false"
-        bat "kubectl rollout restart deployment/${DEPLOY_NAME} -n ${KUBE_NS}"
-        bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS}"
+       // bat "kubectl rollout restart deployment/${DEPLOY_NAME} -n ${KUBE_NS}"
+        //bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS}"
       }
     }
   }
