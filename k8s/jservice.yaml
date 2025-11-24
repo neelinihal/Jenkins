@@ -18,17 +18,17 @@ spec:
       - name: jservice
         image: neelinihal/jservice:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 9090
         readinessProbe:
           httpGet:
             path: /actuator/health
-            port: 8080
+            port: 9090
           initialDelaySeconds: 10
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
-            port: 8080
+            port: 9090
           initialDelaySeconds: 30
           periodSeconds: 20
 ---
@@ -43,6 +43,6 @@ spec:
   selector:
     app: jservice
   ports:
-  - port: 8080
-    targetPort: 8080
+  - port: 9090
+    targetPort: 9090
     protocol: TCP
