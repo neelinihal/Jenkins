@@ -56,7 +56,7 @@ pipeline {
           bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
         }
         bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-             bat "copy k8s\jservice.yaml jservice.yaml"
+             bat "copy %WORKSPACE%\\k8s\\jservice.yaml jservice.yaml"
           bat "powershell -Command \"(Get-Content jservice.yaml) -replace 'image: neelinihal/jservice:.*', 'image: neelinihal/jservice:${IMAGE_TAG}' | Set-Content jservice.yaml\""
           
       }
