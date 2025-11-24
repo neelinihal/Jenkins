@@ -11,6 +11,7 @@ pipeline {
     KUBE_NS      = 'default'
     DEPLOY_NAME  = 'jservice'
     CONTAINER    = 'jservice'
+    KUBECONFIG   = 'C:/Users/neeli/.kube/jenkins-sa-config' // service account kubeconfig
   }
 
   options {
@@ -57,10 +58,12 @@ pipeline {
 
     stage('Deploy to GKE') {
       steps {
-        // Preferred: apply manifest stored in repo
-        //bat "kubectl apply -f %WORKSPACE%\\k8s\\jservice.yaml -n ${KUBE_NS} --timeout=200s --validate=false"
-    bat "kubectl --kubeconfig=C:/Users/neeli/.kube/config apply -f %WORKSPACE%\\k8s\\jservice.yaml -n ${KUBE_NS} --validate=false"
-    bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS} --timeout=200s"
+        withEnv(["KUBECONFIG=${KUBECONFIG}"]) {
+          // Apply manifest stored in repo
+          bat "kubectl apply -f %WORKSPACE%\\k8s\\jservice.yaml -n ${KUBE_NS} --validate=false"
+          // Wait up to 200 seconds for rollout to complete
+          bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS} --timeout=200s"
+        }
       }
     }
   }
