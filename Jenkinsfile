@@ -58,8 +58,8 @@ pipeline {
     stage('Deploy to GKE') {
       steps {
         // Preferred: apply manifest stored in repo
-        bat "kubectl apply -f %WORKSPACE%\\k8s\\jservice.yaml -n ${KUBE_NS} "
-        bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS}"
+        bat "kubectl apply -f %WORKSPACE%\\k8s\\jservice.yaml -n ${KUBE_NS} --timeout=200s "
+        bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS} --timeout=200s"
       }
     }
   }
