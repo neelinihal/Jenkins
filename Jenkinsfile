@@ -57,7 +57,7 @@ pipeline {
         }
         bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
 
-          bat "powershell -Command \"(Get-Content k8s\jservice.yaml) -replace 'image: neelinihal/jservice:.*', 'image: neelinihal/jservice:${IMAGE_TAG}' | Set-Content k8s\jservice.yaml\""
+          bat "powershell -Command \"(Get-Content jservice.yaml) -replace 'image: neelinihal/jservice:.*', 'image: neelinihal/jservice:${IMAGE_TAG}' | Set-Content jservice.yaml\""
           
       }
     }
