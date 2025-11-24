@@ -14,7 +14,7 @@ pipeline {
     GCP_CREDS    = 'gcp-sa-json'   // Jenkins credential ID
     CLUSTER_NAME = 'my-cluster'
     CLUSTER_ZONE = 'us-central1'
-    PROJECT_ID   = 'steel-earth-478506'
+    PROJECT_ID   = 'steel-earth-478506-t2'
   }
 
   stages {
