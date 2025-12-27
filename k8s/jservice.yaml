@@ -43,7 +43,12 @@ spec:
   selector:
     app: jservice
   ports:
-  - name: http   # REQUIRED field
+  - name: http-9090   # unique name
     port: 9090
     targetPort: 9090
     protocol: TCP
+  - name: metrics-8080   # another unique name
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+
