@@ -1,0 +1,37 @@
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+  imageName: 'docker.io/neelinihal/jenkins-app:$(tag)'   # Replace with your Docker Hub repo
+
+stages:
+- stage: BuildAndDeploy
+  displayName: Build and Deploy to Docker Hub
+  jobs:
+  - job: Build
+    displayName: Build and Push
+    pool:
+      name: MyVM
+    steps:
+
+    # Login to Docker Hub using personal credentials
+    - script: |
+        echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+      displayName: 'Login to Docker Hub'
+      env:
+        DOCKER_USERNAME: $(DOCKER_USERNAME)   # Secret variable in Azure DevOps
+        DOCKER_PASSWORD: $(DOCKER_PASSWORD)   # Secret variable in Azure DevOps
+
+    # Build Docker image locally
+    - script: |
+        docker build -t $(imageName) .
+      displayName: 'Build Docker Image'
+
+    # Push Docker image to Docker Hub
+    - script: |
+        docker push $(imageName)
+      displayName: 'Push Docker Image'
