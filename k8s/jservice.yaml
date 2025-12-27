@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: jservice
-        image: neelinihal/jservice:latest
+        image: docker.io/neelinihal/jenkins-app:latest
         ports:
         - containerPort: 9090
         readinessProbe:
@@ -43,6 +43,7 @@ spec:
   selector:
     app: jservice
   ports:
-  - port: 9090
+  - name: http   # REQUIRED field
+    port: 9090
     targetPort: 9090
     protocol: TCP
