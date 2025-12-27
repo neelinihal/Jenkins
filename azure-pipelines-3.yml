@@ -1,0 +1,54 @@
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+- group: GCP-Deploy   # Contains DOCKER_USERNAME, DOCKER_PASSWORD, GCP_SA_KEY
+- name: tag
+  value: '$(Build.BuildId)'
+- name: imageName
+  value: 'docker.io/neelinihal/jenkins-app:$(tag)'
+
+stages:
+- stage: BuildAndDeploy
+  displayName: Build, Push, and Deploy to GKE
+  jobs:
+  - job: Build
+    displayName: Build, Push, and Deploy
+    pool:
+      name: MyVM
+    steps:
+
+    # Login to Docker Hub
+    - script: |
+        echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
+      displayName: 'Login to Docker Hub'
+      env:
+        DOCKER_USERNAME: $(DOCKER_USERNAME)
+        DOCKER_PASSWORD: $(DOCKER_PASSWORD)
+
+    # Build Docker image locally
+    - script: |
+        docker build -t $(imageName) .
+      displayName: 'Build Docker Image'
+
+    # Push Docker image to Docker Hub
+    - script: |
+        docker push $(imageName)
+      displayName: 'Push Docker Image'
+
+    # Authenticate with GCP and configure kubectl
+    - script: |
+        echo "$GCP_SA_KEY" > gcp-key.json
+        gcloud auth activate-service-account --key-file=gcp-key.json
+        gcloud config set project steel-earth-478506-t2
+        gcloud container clusters get-credentials my-cluster --zone us-central1 --project steel-earth-478506-t2
+      displayName: 'Authenticate with GCP'
+
+    # Deploy to GKE using Kubernetes manifest
+    - script: |
+        kubectl set image deployment/jenkins-app jenkins-app=$(imageName) --record || true
+        kubectl apply -f $(Build.SourcesDirectory)/k8s/jservice.yaml
+      displayName: 'Deploy to GKE'
