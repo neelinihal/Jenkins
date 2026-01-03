@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jservice
-  labels:
-    app: jservice
 spec:
   replicas: 1
   selector:
@@ -16,40 +14,8 @@ spec:
     spec:
       containers:
       - name: jservice
-        image: neelinihal/jservice-local:1.0
+        image: neelinihal/jservice:IMAGE_TAG
         imagePullPolicy: Always
         ports:
-        - containerPort: 9090
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 9090
-          initialDelaySeconds: 10
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /actuator/health/liveness
-            port: 9090
-          initialDelaySeconds: 30
-          periodSeconds: 20
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: jservice
-  labels:
-    app: jservice
-spec:
-  type: LoadBalancer
-  selector:
-    app: jservice
-  ports:
-  - name: http-9090   # unique name
-    port: 9090
-    targetPort: 9090
-    protocol: TCP
-  - name: metrics-8080   # another unique name
-    port: 8080
-    targetPort: 8080
-    protocol: TCP
+        - containerPort: 8080
 

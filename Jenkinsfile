@@ -7,77 +7,58 @@ pipeline {
   }
 
   environment {
-    REPO_URL     = 'https://github.com/neelinihal/Jenkins.git'
-    GIT_BRANCH   = 'main'
-    MODULE_DIR   = '.'
     IMAGE_NAME   = 'neelinihal/jservice'
-    IMAGE_TAG    = "build-${env.BUILD_NUMBER}"
+    IMAGE_TAG    = "build-${BUILD_NUMBER}"
     DOCKER_CREDS = 'dockerhub-creds'
-    KUBE_NS      = 'default'
-    DEPLOY_NAME  = 'jservice'
-    CONTAINER    = 'jservice'
-    GCP_CREDS    = 'gcp-sa-json'   // Jenkins credential ID
-    CLUSTER_NAME = 'my-cluster'
-    CLUSTER_ZONE = 'us-central1'
-    PROJECT_ID   = 'steel-earth-478506-t2'
+    KUBE_CREDS   = 'kubeconfig-local'
   }
 
   stages {
+
     stage('Checkout') {
       steps {
-        checkout([$class: 'GitSCM',
-          branches: [[name: "*/${GIT_BRANCH}"]],
-          userRemoteConfigs: [[url: REPO_URL]]
-        ])
+        checkout scm
       }
     }
 
-    stage('Build (Maven)') {
+    stage('Build App') {
       steps {
-        dir(MODULE_DIR) {
-          bat 'mvn -version'
-          bat 'mvn clean package -Dmaven.test.failure.ignore=false'
+        sh 'mvn clean package -DskipTests'
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+      }
+    }
+
+    stage('Push to Docker Hub') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: "${DOCKER_CREDS}",
+          usernameVariable: 'USER',
+          passwordVariable: 'PASS'
+        )]) {
+          sh '''
+            echo $PASS | docker login -u $USER --password-stdin
+            docker push $IMAGE_NAME:$IMAGE_TAG
+          '''
         }
       }
     }
 
-    stage('Docker build') {
+    stage('Deploy to LOCAL k3s') {
       steps {
-        dir(MODULE_DIR) {
-          bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+        withCredentials([file(credentialsId: "${KUBE_CREDS}", variable: 'KUBECONFIG')]) {
+          sh '''
+            sed -i "s|IMAGE_TAG|$IMAGE_TAG|g" k8s/jservice.yaml
+            kubectl apply -f k8s/
+            kubectl rollout status deployment/jservice
+          '''
         }
-      }
-    }
-
-    stage('Docker login & push') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          bat 'docker logout || ver > nul'
-          bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
-        }
-        bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-             bat "copy %WORKSPACE%\\k8s\\jservice.yaml jservice.yaml"
-          bat "powershell -Command \"(Get-Content jservice.yaml) -replace 'image: neelinihal/jservice:.*', 'image: neelinihal/jservice:${IMAGE_TAG}' | Set-Content jservice.yaml\""
-          
-      }
-    }
-
-    stage('Authenticate GCP') {
-      steps {
-        withCredentials([file(credentialsId: "${GCP_CREDS}", variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-          bat "\"C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud\" auth activate-service-account --key-file=%GOOGLE_APPLICATION_CREDENTIALS%"
-          bat "\"C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud\" config set project ${PROJECT_ID}"
-          bat "\"C:/Users/neeli/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud\" container clusters get-credentials ${CLUSTER_NAME} --zone ${CLUSTER_ZONE} --project ${PROJECT_ID}"
-        }
-      }
-    }
-
-    stage('Deploy to GKE') {
-      steps {
-        bat "kubectl apply -f jservice.yaml -n ${KUBE_NS} --validate=false"
-       // bat "kubectl rollout restart deployment/${DEPLOY_NAME} -n ${KUBE_NS}"
-        //bat "kubectl rollout status deployment/${DEPLOY_NAME} -n ${KUBE_NS}"
       }
     }
   }
 }
+
