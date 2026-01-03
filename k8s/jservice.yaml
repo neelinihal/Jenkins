@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: jservice
-        image: docker.io/neelinihal/jenkins-app:latest
+        image: neelinihal/jservice-local:1.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 9090
         readinessProbe:
